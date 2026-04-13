@@ -4,19 +4,36 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hickepicke/todo-cli/api"
 	"github.com/spf13/cobra"
 )
 
 var doneCmd = &cobra.Command{
 	Use:   "done <id>",
-	Short: "Mark a todo as complete",
+	Short: "Toggle a todo's done state",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := parseID(args[0])
 		if err != nil {
 			return err
 		}
-		todos, err := client.Update(id, map[string]any{"done": true, "cascade": true})
+		// Fetch current state to toggle
+		all, err := client.List()
+		if err != nil {
+			return err
+		}
+		var current *api.Todo
+		for i := range all {
+			if all[i].ID == id {
+				current = &all[i]
+				break
+			}
+		}
+		if current == nil {
+			return fmt.Errorf("todo %d not found", id)
+		}
+		newDone := !current.Done
+		todos, err := client.Update(id, map[string]any{"done": newDone, "cascade": true})
 		if err != nil {
 			return err
 		}
