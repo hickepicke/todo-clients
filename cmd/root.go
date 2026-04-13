@@ -14,9 +14,9 @@ var client *api.Client
 var rootCmd = &cobra.Command{
 	Use:   "todo",
 	Short: "CLI for todo.hicke.se",
-	// No args → list
+	// No args → TUI
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return listCmd.RunE(cmd, args)
+		return runTUI()
 	},
 }
 
@@ -29,6 +29,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initClient)
 
+	rootCmd.AddCommand(tuiCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(addCmd)
 	rootCmd.AddCommand(subCmd)

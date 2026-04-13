@@ -1,0 +1,11 @@
+site_name: todo-cli docs
+site_url: https://hickepicke.github.io/todo-cli/
+repo_url: https://github.com/hickepicke/todo-cli
+repo_name: hickepicke/todo-cli
+
+nav:
+  - Home: index.md
+  - GUI Date Sections: gui-date-sections.md
+
+theme:
+  name: material

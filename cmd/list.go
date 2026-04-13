@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"time"
@@ -38,7 +37,6 @@ var (
 	styleDateTag  = lipgloss.NewStyle().Faint(true)
 )
 
-const today = "today" // sentinel — replaced at runtime
 
 func printTodos(todos []api.Todo) {
 	now := time.Now().Format("2006-01-02")
@@ -233,5 +231,3 @@ func fmtShort(iso string) string {
 	return t.Format("Jan 2")
 }
 
-// suppress unused warning
-var _ = os.Stderr
