@@ -213,6 +213,18 @@ func (m tuiModel) withTodos(todos []api.Todo) tuiModel {
 	return m
 }
 
+// rowTodoID decodes a row's todoID into the real todo ID.
+// Returns (0, false) for section header rows.
+func rowTodoID(todoID int) (realID int, isSub bool) {
+	if todoID == -1 {
+		return 0, false // section header
+	}
+	if todoID < -1 {
+		return -(todoID + 1000000), true // subtask
+	}
+	return todoID, false
+}
+
 func (m tuiModel) findTodo(id int) *api.Todo {
 	for i := range m.todos {
 		if m.todos[i].ID == id {
@@ -347,18 +359,20 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case " ":
 				row := m.rows[m.cursor]
-				if row.todoID <= 0 {
+				realID, isSub := rowTodoID(row.todoID)
+				if realID == 0 {
 					break
 				}
-				t := m.findTodo(row.todoID)
+				t := m.findTodo(realID)
 				if t == nil {
 					break
 				}
 				newDone := !t.Done
 				id := t.ID
+				cascade := !isSub // cascade to subtasks only for top-level todos
 				m.mode = tuiLoading
 				return m, func() tea.Msg {
-					todos, err := m.cl.Update(id, map[string]any{"done": newDone, "cascade": true})
+					todos, err := m.cl.Update(id, map[string]any{"done": newDone, "cascade": cascade})
 					if err != nil {
 						return tuiErrMsg{err}
 					}
@@ -377,10 +391,11 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case "e":
 				row := m.rows[m.cursor]
-				if row.todoID <= 0 {
+				realID, _ := rowTodoID(row.todoID)
+				if realID == 0 {
 					break
 				}
-				t := m.findTodo(row.todoID)
+				t := m.findTodo(realID)
 				if t == nil {
 					break
 				}
@@ -391,10 +406,11 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case "d":
 				row := m.rows[m.cursor]
-				if row.todoID <= 0 {
+				realID, _ := rowTodoID(row.todoID)
+				if realID == 0 {
 					break
 				}
-				t := m.findTodo(row.todoID)
+				t := m.findTodo(realID)
 				if t == nil {
 					break
 				}
