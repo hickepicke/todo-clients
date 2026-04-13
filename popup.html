@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #dc2626; --bg: #f0f0f0; --surface: #fff;
+      --surface2: #e8e8e8; --border: rgba(0,0,0,0.08);
+      --text: #1a1a1a; --dim: rgba(0,0,0,0.42); --faint: rgba(0,0,0,0.22);
+    }
+    body {
+      width: 360px; min-height: 200px; max-height: 560px;
+      overflow-y: auto; background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text); font-size: 13px;
+    }
+    header {
+      background: var(--red); padding: 0.6rem 0.85rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      position: sticky; top: 0; z-index: 10;
+    }
+    header h1 { flex: 1; font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .hdr-btn {
+      background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+      color: #fff; width: 26px; height: 26px; border-radius: 6px;
+      cursor: pointer; font-size: 1.1rem; font-weight: 300;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hdr-btn:hover { background: rgba(255,255,255,0.3); }
+    main { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .section { border-radius: 8px; overflow: hidden; background: var(--surface);
+               box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .sec-hdr {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.55rem 0.75rem; cursor: pointer; user-select: none;
+    }
+    .sec-hdr.today { background: rgba(220,38,38,0.05); border-left: 3px solid var(--red); padding-left: calc(0.75rem - 3px); }
+    .sec-hdr.overdue { background: rgba(239,68,68,0.06); border-left: 3px solid #ef4444; padding-left: calc(0.75rem - 3px); }
+    .sec-label { flex: 1; font-size: 0.75rem; font-weight: 600; }
+    .sec-hdr.today .sec-label { color: var(--red); }
+    .sec-hdr.overdue .sec-label { color: #ef4444; }
+    .sec-count { font-size: 0.65rem; color: var(--dim); }
+    .sec-arrow { font-size: 0.6rem; color: var(--faint); transition: transform 0.2s; }
+    .sec-arrow.open { transform: rotate(90deg); }
+    .sec-body { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
+    .sec-body.open { max-height: 2000px; }
+    .sec-add {
+      padding: 0.45rem 0.75rem; color: var(--faint); font-size: 0.74rem;
+      cursor: pointer; border-top: 1px solid var(--border);
+    }
+    .sec-add:hover { color: var(--red); }
+    .todo-row { display: flex; align-items: center; gap: 0.5rem;
+                padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
+    .todo-row.subtask { padding-left: 1.75rem; }
+    .todo-check {
+      flex-shrink: 0; width: 16px; height: 16px;
+      border: 1.5px solid rgba(220,38,38,0.35); border-radius: 3px;
+      background: rgba(220,38,38,0.04); color: var(--red);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; cursor: pointer;
+    }
+    .todo-check:hover { background: rgba(220,38,38,0.12); }
+    .done .todo-check { background: rgba(220,38,38,0.12); }
+    .todo-text { flex: 1; line-height: 1.35; cursor: pointer; }
+    .done .todo-text { text-decoration: line-through; color: var(--faint); }
+    .todo-link {
+      font-size: 0.65rem; color: var(--red); font-weight: 600;
+      text-decoration: none; background: rgba(220,38,38,0.08);
+      border: 1px solid rgba(220,38,38,0.2); border-radius: 3px;
+      padding: 0.05rem 0.3rem; white-space: nowrap; flex-shrink: 0;
+    }
+    .todo-del { flex-shrink: 0; font-size: 0.65rem; color: rgba(220,38,38,0.3); cursor: pointer; padding: 0.2rem; }
+    .todo-del:hover { color: var(--red); }
+    .no-key {
+      padding: 1.25rem 1rem; text-align: center; color: var(--dim); font-size: 0.8rem;
+    }
+    .no-key a { color: var(--red); text-decoration: none; font-weight: 600; }
+    #loading { padding: 1.25rem 1rem; text-align: center; color: var(--faint); font-size: 0.8rem; }
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.35); z-index: 50;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--surface); border-radius: 12px 12px 0 0;
+      padding: 1rem 1rem 1.5rem; width: 100%;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+      animation: slideUp 0.18s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .modal-title { font-size: 0.82rem; font-weight: 700; color: var(--red); margin-bottom: 0.75rem; }
+    .modal-input {
+      width: 100%; background: var(--bg); border: 1px solid rgba(0,0,0,0.12);
+      color: var(--text); padding: 0.55rem 0.65rem; border-radius: 7px;
+      font-size: 0.9rem; margin-bottom: 0.6rem;
+    }
+    .modal-input:focus { outline: none; border-color: var(--red); }
+    .modal-dates { display: flex; gap: 0.3rem; margin-bottom: 0.75rem; }
+    .date-btn {
+      flex: 1; padding: 0.35rem 0.4rem; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--dim); font-size: 0.7rem; cursor: pointer; text-align: center;
+    }
+    .date-btn.active { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.4); color: var(--red); font-weight: 600; }
+    .modal-btns { display: flex; gap: 0.4rem; justify-content: flex-end; }
+    .modal-btn {
+      padding: 0.45rem 0.9rem; border-radius: 7px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--dim); font-size: 0.8rem; cursor: pointer;
+    }
+    .modal-btn.primary { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.35); color: var(--red); font-weight: 600; }
+    .modal-btn.primary:hover { background: rgba(220,38,38,0.15); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Todos</h1>
+    <button class="hdr-btn" id="settings-btn" title="Settings">⚙</button>
+    <button class="hdr-btn" id="add-btn" title="Add todo">+</button>
+  </header>
+
+  <div id="loading">Loading…</div>
+  <main id="app" style="display:none"></main>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box">
+      <div class="modal-title" id="modal-title">Add Todo</div>
+      <input class="modal-input" id="modal-text" type="text" placeholder="What needs to be done?" autocomplete="off" />
+      <input class="modal-input" id="modal-url" type="url" placeholder="Link URL (optional)" autocomplete="off" />
+      <div class="modal-dates">
+        <button class="date-btn active" data-date="today">Today</button>
+        <button class="date-btn" data-date="tomorrow">Tomorrow</button>
+        <button class="date-btn" data-date="someday">Someday</button>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn" id="modal-cancel">Cancel</button>
+        <button class="modal-btn primary" id="modal-save">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

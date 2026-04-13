@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todos — Settings</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: #f0f0f0; color: #1a1a1a; padding: 2rem; max-width: 480px; }
+    h1 { font-size: 1rem; font-weight: 700; color: #dc2626; margin-bottom: 1.5rem; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; }
+    input { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 8px; font-size: 0.9rem; background: #fff; box-sizing: border-box; }
+    input:focus { outline: none; border-color: #dc2626; }
+    button { margin-top: 1rem; padding: 0.55rem 1.25rem; background: rgba(220,38,38,0.08);
+             border: 1px solid rgba(220,38,38,0.35); color: #dc2626; font-weight: 600;
+             font-size: 0.85rem; border-radius: 8px; cursor: pointer; }
+    button:hover { background: rgba(220,38,38,0.15); }
+    #status { margin-top: 0.75rem; font-size: 0.8rem; color: #166534; }
+    p { font-size: 0.8rem; color: rgba(0,0,0,0.5); margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Todos — Settings</h1>
+  <p>Enter your API key from <code>~/.config/todo/config.toml</code>.</p>
+  <label for="key">API Key</label>
+  <input type="password" id="key" placeholder="Paste your API key…" autocomplete="off" />
+  <button id="save">Save</button>
+  <div id="status"></div>
+  <script src="options.js"></script>
+</body>
+</html>
