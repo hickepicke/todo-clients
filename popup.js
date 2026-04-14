@@ -91,7 +91,7 @@ function getChildren(parentId) {
 
 // ── render ────────────────────────────────────────────────────────────────────
 
-const openSections = { overdue: true, today: true, tomorrow: true };
+const openSections = { today: true, tomorrow: true };
 
 function esc(s) {
   return String(s)
@@ -140,7 +140,7 @@ function buildRow(t, showDate) {
 }
 
 function buildSection(key, label, items, cls, addDate, showDate) {
-  const isOpen = openSections[key] !== false;
+  const isOpen = openSections[key] === true;
   const arrow = '<span class="sec-arrow' + (isOpen ? ' open' : '') + '">&#x25B6;</span>';
   const count = items.length ? '<span class="sec-count">' + items.length + ' task' + (items.length !== 1 ? 's' : '') + '</span>' : '';
   const rows = items.map(function(t) { return buildRow(t, showDate); }).join('');
