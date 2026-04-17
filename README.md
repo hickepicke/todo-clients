@@ -1,22 +1,38 @@
-# todo-cli
+# todo-clients
 
-Terminal companion for [todo.hicke.se](https://todo.hicke.se). Same API, same data — manage todos without opening a browser.
+Go CLI/TUI and Chrome extension for [todo.hicke.se](https://todo.hicke.se). Same API, same data — manage todos without opening a browser.
 
-Built in Go using [Bubble Tea](https://github.com/charmbracelet/bubbletea) for the TUI.
+CLI built with Go + [Bubble Tea](https://github.com/charmbracelet/bubbletea). Extension uses Manifest v3.
 
-## Install
-
-```bash
-go install github.com/hickepicke/todo-cli@latest
-```
-
-Or build locally:
+## Quick install
 
 ```bash
-git clone https://github.com/hickepicke/todo-cli
-cd todo-cli
-go build -o todo .
+curl -fsSL https://api.hicke.se/install.sh | sh
 ```
+
+Installs Go (if missing), the `todo` CLI binary, and clones this repo to `~/.todo-clients/` for the Chrome extension.
+
+Then load the Chrome extension:
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. **Load unpacked** → select `~/.todo-clients/extension/`
+4. Click ⚙ in the popup → enter your API key
+
+## Manual install
+
+**CLI only** (requires Go):
+
+```bash
+go install github.com/hickepicke/todo-clients@latest
+```
+
+**Chrome extension only:**
+
+```bash
+git clone https://github.com/hickepicke/todo-clients ~/.todo-clients
+```
+
+Then load `~/.todo-clients/extension/` as an unpacked extension in Chrome.
 
 ## Config
 
@@ -27,7 +43,7 @@ api_key  = "your-api-key"
 api_base = "https://api.hicke.se"   # optional default
 ```
 
-Or use environment variables:
+Or use an environment variable:
 
 ```bash
 export TODO_API_KEY=your-api-key
@@ -104,3 +120,8 @@ todo edit <id> --url ""                 # clear URL
 ```
 
 URLs render as clickable `→ Link` in terminals that support OSC 8 hyperlinks (iTerm2, Kitty, WezTerm).
+
+## Related
+
+- [todo.hicke.se](https://todo.hicke.se) — web app
+- [hickepicke/hicke-docs](https://github.com/hickepicke/hicke-docs) — API source + docs site
