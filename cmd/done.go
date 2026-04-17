@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hickepicke/todo-cli/api"
+	"github.com/hickepicke/todo-clients/api"
 	"github.com/spf13/cobra"
 )
 

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/hickepicke/todo-cli/api"
+	"github.com/hickepicke/todo-clients/api"
 	"github.com/spf13/cobra"
 )
 
