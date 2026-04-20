@@ -16,7 +16,7 @@ async function updateBadge() {
     const todos = await r.json();
     const today = new Date().toISOString().slice(0, 10);
     const count = todos.filter(t => !t.done && t.due_date === today && t.parent_id === null).length;
-    chrome.action.setBadgeBackgroundColor({ color: '#dc2626' });
+    chrome.action.setBadgeBackgroundColor({ color: '#1c69c7' });
     chrome.action.setBadgeText({ text: count > 0 ? String(count) : '' });
   } catch {
     chrome.action.setBadgeText({ text: '' });
