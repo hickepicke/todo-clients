@@ -7,7 +7,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --red: #dc2626; --bg: #f0f0f0; --surface: #fff;
+      --red: #1c69c7; --bg: #f0f0f0; --surface: #fff;
       --surface2: #e8e8e8; --border: rgba(0,0,0,0.08);
       --text: #1a1a1a; --dim: rgba(0,0,0,0.42); --faint: rgba(0,0,0,0.22);
     }
@@ -37,7 +37,7 @@
       display: flex; align-items: center; gap: 0.4rem;
       padding: 0.55rem 0.75rem; cursor: pointer; user-select: none;
     }
-    .sec-hdr.today { background: rgba(220,38,38,0.05); border-left: 3px solid var(--red); padding-left: calc(0.75rem - 3px); }
+    .sec-hdr.today { background: rgba(28,105,199,0.05); border-left: 3px solid var(--red); padding-left: calc(0.75rem - 3px); }
     .sec-hdr.overdue { background: rgba(239,68,68,0.06); border-left: 3px solid #ef4444; padding-left: calc(0.75rem - 3px); }
     .sec-label { flex: 1; font-size: 0.75rem; font-weight: 600; }
     .sec-hdr.today .sec-label { color: var(--red); }
@@ -57,22 +57,22 @@
     .todo-row.subtask { padding-left: 1.75rem; }
     .todo-check {
       flex-shrink: 0; width: 16px; height: 16px;
-      border: 1.5px solid rgba(220,38,38,0.35); border-radius: 3px;
-      background: rgba(220,38,38,0.04); color: var(--red);
+      border: 1.5px solid rgba(28,105,199,0.35); border-radius: 3px;
+      background: rgba(28,105,199,0.04); color: var(--red);
       display: flex; align-items: center; justify-content: center;
       font-size: 0.65rem; cursor: pointer;
     }
-    .todo-check:hover { background: rgba(220,38,38,0.12); }
-    .done .todo-check { background: rgba(220,38,38,0.12); }
+    .todo-check:hover { background: rgba(28,105,199,0.12); }
+    .done .todo-check { background: rgba(28,105,199,0.12); }
     .todo-text { flex: 1; line-height: 1.35; cursor: pointer; }
     .done .todo-text { text-decoration: line-through; color: var(--faint); }
     .todo-link {
       font-size: 0.65rem; color: var(--red); font-weight: 600;
-      text-decoration: none; background: rgba(220,38,38,0.08);
-      border: 1px solid rgba(220,38,38,0.2); border-radius: 3px;
+      text-decoration: none; background: rgba(28,105,199,0.08);
+      border: 1px solid rgba(28,105,199,0.2); border-radius: 3px;
       padding: 0.05rem 0.3rem; white-space: nowrap; flex-shrink: 0;
     }
-    .todo-del { flex-shrink: 0; font-size: 0.65rem; color: rgba(220,38,38,0.3); cursor: pointer; padding: 0.2rem; }
+    .todo-del { flex-shrink: 0; font-size: 0.65rem; color: rgba(28,105,199,0.3); cursor: pointer; padding: 0.2rem; }
     .todo-del:hover { color: var(--red); }
     .no-key {
       padding: 1.25rem 1rem; text-align: center; color: var(--dim); font-size: 0.8rem;
@@ -106,14 +106,14 @@
       border: 1px solid var(--border); background: var(--surface2);
       color: var(--dim); font-size: 0.7rem; cursor: pointer; text-align: center;
     }
-    .date-btn.active { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.4); color: var(--red); font-weight: 600; }
+    .date-btn.active { background: rgba(28,105,199,0.08); border-color: rgba(28,105,199,0.4); color: var(--red); font-weight: 600; }
     .modal-btns { display: flex; gap: 0.4rem; justify-content: flex-end; }
     .modal-btn {
       padding: 0.45rem 0.9rem; border-radius: 7px; border: 1px solid var(--border);
       background: var(--surface2); color: var(--dim); font-size: 0.8rem; cursor: pointer;
     }
-    .modal-btn.primary { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.35); color: var(--red); font-weight: 600; }
-    .modal-btn.primary:hover { background: rgba(220,38,38,0.15); }
+    .modal-btn.primary { background: rgba(28,105,199,0.08); border-color: rgba(28,105,199,0.35); color: var(--red); font-weight: 600; }
+    .modal-btn.primary:hover { background: rgba(28,105,199,0.15); }
   </style>
 </head>
 <body>
