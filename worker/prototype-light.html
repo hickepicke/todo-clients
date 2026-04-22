@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todos v2 — Light Prototype</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #dc2626;
+      --red-light: rgba(220,38,38,0.08);
+      --bg: #f0f0f0;
+      --surface: #ffffff;
+      --surface2: #e8e8e8;
+      --border: rgba(0,0,0,0.08);
+      --text: #1a1a1a;
+      --text-dim: rgba(0,0,0,0.42);
+      --text-faint: rgba(0,0,0,0.22);
+      --green-bg: #dcfce7;
+      --green-fg: #166534;
+      --red-bg: #fee2e2;
+      --red-fg: #991b1b;
+      --radius: 10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    header {
+      background: var(--red);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 1px 6px rgba(220,38,38,0.25);
+    }
+    header h1 {
+      flex: 1;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    #hdr-sub {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.65);
+    }
+    .hdr-add {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #ffffff;
+      font-size: 1.3rem;
+      font-weight: 300;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      line-height: 1;
+    }
+    .hdr-add:hover { background: rgba(255,255,255,0.3); }
+
+    /* ── Main ───────────────────────────────────────── */
+    main { padding: 0.75rem 0.75rem 6rem; display: flex; flex-direction: column; gap: 0.4rem; }
+
+    /* ── Section ────────────────────────────────────── */
+    .section { border-radius: var(--radius); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      cursor: pointer;
+      background: var(--surface);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .section-hdr:active { background: var(--surface2); }
+
+    .section-hdr.today {
+      background: rgba(220,38,38,0.05);
+      border-left: 3px solid var(--red);
+      padding-left: calc(0.9rem - 3px);
+    }
+    .section-hdr.overdue {
+      background: rgba(239,68,68,0.06);
+      border-left: 3px solid #ef4444;
+      padding-left: calc(0.9rem - 3px);
+    }
+
+    .section-label {
+      flex: 1;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .section-hdr.today .section-label { color: var(--red); }
+    .section-hdr.overdue .section-label { color: #ef4444; }
+
+    .section-count {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+    .section-arrow {
+      font-size: 0.65rem;
+      color: var(--text-faint);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    .section-arrow.open { transform: rotate(90deg); }
+
+    .section-body {
+      background: var(--surface);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.28s ease;
+    }
+    .section-body.open { max-height: 4000px; }
+
+    .section-add {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 0.9rem;
+      color: var(--text-faint);
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-top: 1px solid var(--border);
+      transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .section-add:hover, .section-add:active { color: var(--red); }
+
+    /* ── Todo row ───────────────────────────────────── */
+    .todo-row {
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+    }
+    .todo-row.subtask .todo-inner { padding-left: 2.4rem; }
+    .todo-row.subtask .todo-check { width: 16px; height: 16px; font-size: 0.7rem; }
+
+    .swipe-bg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .swipe-bg.right { background: var(--green-bg); color: var(--green-fg); justify-content: flex-start; }
+    .swipe-bg.left  { background: var(--red-bg);   color: var(--red-fg);   justify-content: flex-end; }
+
+    .todo-inner {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.9rem;
+      background: var(--surface);
+      position: relative;
+      z-index: 1;
+      touch-action: pan-y;
+      will-change: transform;
+    }
+    .todo-inner.snapping { transition: transform 0.2s ease; }
+
+    .todo-check {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border: 1.5px solid rgba(220,38,38,0.35);
+      border-radius: 4px;
+      background: rgba(220,38,38,0.04);
+      color: var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .todo-check:hover, .todo-check:active { background: rgba(220,38,38,0.1); }
+    .todo-row.done .todo-check { background: rgba(220,38,38,0.12); }
+
+    .todo-text {
+      flex: 1;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: var(--text);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .todo-row.done .todo-text {
+      text-decoration: line-through;
+      color: var(--text-faint);
+    }
+
+    .todo-sub-count {
+      font-size: 0.65rem;
+      color: var(--text-faint);
+      margin-left: 0.25rem;
+    }
+
+    .todo-del {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      color: rgba(220,38,38,0.3);
+      cursor: pointer;
+      padding: 0.25rem 0.4rem;
+      transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .todo-del:hover, .todo-del:active { color: var(--red); }
+
+    /* ── Modal ──────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 50;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      padding: 1.25rem 1.25rem 2rem;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+      animation: slideUp 0.2s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(60px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @media (min-width: 480px) {
+      .modal-overlay { align-items: center; padding: 1rem; }
+      .modal-box { border-radius: 14px; max-width: 400px; padding-bottom: 1.25rem; }
+    }
+
+    .modal-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 1rem;
+    }
+    .modal-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid rgba(0,0,0,0.12);
+      color: var(--text);
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .modal-input:focus { outline: none; border-color: var(--red); }
+
+    .modal-dates {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1.1rem;
+    }
+    .date-btn {
+      flex: 1;
+      padding: 0.45rem 0.5rem;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .date-btn:hover { border-color: rgba(220,38,38,0.3); color: var(--text); }
+    .date-btn.active {
+      background: rgba(220,38,38,0.08);
+      border-color: rgba(220,38,38,0.4);
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .modal-btns { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .modal-btn {
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .modal-btn:hover { background: rgba(0,0,0,0.06); color: var(--text); }
+    .modal-btn.primary {
+      background: rgba(220,38,38,0.08);
+      border-color: rgba(220,38,38,0.35);
+      color: var(--red);
+      font-weight: 600;
+    }
+    .modal-btn.primary:hover { background: rgba(220,38,38,0.15); }
+
+    /* ── Toast ──────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 0.6rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+      color: var(--text);
+      z-index: 60;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast-undo {
+      color: var(--red);
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0.15rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="22" height="22"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+  <h1>Todos</h1>
+  <span id="hdr-sub"></span>
+  <button class="hdr-add" id="hdr-add" title="Add todo (t)">+</button>
+</header>
+
+<main id="app"></main>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Add Todo</div>
+    <input class="modal-input" id="modal-input" type="text" placeholder="What needs to be done?" autocomplete="off" />
+    <div class="modal-dates" id="modal-dates">
+      <button class="date-btn active" data-date="today">Today</button>
+      <button class="date-btn" data-date="tomorrow">Tomorrow</button>
+      <button class="date-btn" data-date="someday">Someday</button>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn" id="modal-cancel">Cancel</button>
+      <button class="modal-btn primary" id="modal-save">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toast-msg">Task deleted</span>
+  <span class="toast-undo" id="toast-undo">Undo</span>
+</div>
+
+<script>
+(function () {
+  // ── Date helpers ─────────────────────────────────────────────────────
+  function isoDate(d) {
+    return d.toISOString().slice(0, 10);
+  }
+  const TODAY    = isoDate(new Date());
+  const TOMORROW = isoDate(new Date(Date.now() + 86400000));
+
+  function dateLabel(iso) {
+    if (!iso) return 'Someday';
+    if (iso === TODAY)    return 'Today';
+    if (iso === TOMORROW) return 'Tomorrow';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-SE', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  function offsetDate(days) {
+    return isoDate(new Date(Date.now() + days * 86400000));
+  }
+
+  // ── Mock data ────────────────────────────────────────────────────────
+  let nextId = 100;
+  let todos = [
+    { id: 1,  text: 'Call dentist',       done: false, due_date: TODAY,             parent_id: null, position: 0 },
+    { id: 2,  text: 'Buy groceries',      done: false, due_date: TODAY,             parent_id: null, position: 1 },
+    { id: 3,  text: 'Milk',               done: true,  due_date: TODAY,             parent_id: 2,    position: 2 },
+    { id: 4,  text: 'Eggs',               done: false, due_date: TODAY,             parent_id: 2,    position: 3 },
+    { id: 5,  text: 'Review PR #42',      done: true,  due_date: TODAY,             parent_id: null, position: 4 },
+    { id: 6,  text: 'Team standup',       done: false, due_date: TOMORROW,          parent_id: null, position: 5 },
+    { id: 7,  text: 'Deploy update',      done: false, due_date: TOMORROW,          parent_id: null, position: 6 },
+    { id: 8,  text: 'Pay invoice',        done: false, due_date: offsetDate(3),     parent_id: null, position: 7 },
+    { id: 9,  text: 'Write test cases',   done: false, due_date: offsetDate(3),     parent_id: null, position: 8 },
+    { id: 10, text: 'Plan sprint',        done: false, due_date: offsetDate(5),     parent_id: null, position: 9 },
+    { id: 11, text: 'Pay rent',           done: false, due_date: offsetDate(-2),    parent_id: null, position: 10 },
+    { id: 12, text: 'Learn guitar',       done: false, due_date: null,              parent_id: null, position: 11 },
+    { id: 13, text: 'Read Dune',          done: false, due_date: null,              parent_id: null, position: 12 },
+    { id: 14, text: 'Clean apartment',    done: false, due_date: null,              parent_id: null, position: 13 },
+  ];
+
+  // ── State ────────────────────────────────────────────────────────────
+  let expandedSections = { overdue: true, today: true, someday: true };
+  let expandedDays = {};
+  let undoItem  = null;
+  let undoTimer = null;
+  let editingId = null;
+  let modalDate = TODAY;
+
+  // ── Group todos ──────────────────────────────────────────────────────
+  function groupTodos() {
+    const overdue = [], today = [], future = {}, someday = [];
+    todos.forEach(t => {
+      if (t.parent_id !== null) return;
+      if (!t.due_date) { someday.push(t); return; }
+      if (t.due_date < TODAY)   { overdue.push(t); return; }
+      if (t.due_date === TODAY)  { today.push(t);   return; }
+      if (!future[t.due_date]) future[t.due_date] = [];
+      future[t.due_date].push(t);
+    });
+    return { overdue, today, future, someday };
+  }
+
+  function getChildren(parentId) {
+    return todos.filter(t => t.parent_id === parentId);
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────
+  function render() {
+    const app = document.getElementById('app');
+    const sub = document.getElementById('hdr-sub');
+    const done  = todos.filter(t => t.done).length;
+    const total = todos.length;
+    sub.textContent = done + '/' + total + ' done';
+
+    const { overdue, today, future, someday } = groupTodos();
+    const parts = [];
+
+    if (overdue.length) {
+      parts.push(renderSection('overdue', 'Overdue', null, overdue, { alwaysShowAdd: false }));
+    }
+
+    parts.push(renderSection('today', 'Today \u2014 ' + new Date().toLocaleDateString('en-SE', { weekday: 'long', month: 'short', day: 'numeric' }), TODAY, today, { alwaysExpanded: true }));
+
+    Object.keys(future).sort().forEach(function(date) {
+      const key = 'day-' + date;
+      parts.push(renderSection(key, dateLabel(date), date, future[date], {}));
+    });
+
+    var shown = 0;
+    for (var i = 1; i <= 7 && shown < 3; i++) {
+      var d = offsetDate(i);
+      if (!future[d]) {
+        var key2 = 'day-' + d;
+        parts.push(renderSection(key2, dateLabel(d), d, [], {}));
+        shown++;
+      }
+    }
+
+    parts.push(renderSection('someday', 'Someday', null, someday, {}));
+
+    app.innerHTML = parts.join('');
+    attachListeners();
+  }
+
+  function renderSection(key, label, date, items, opts) {
+    var isToday   = key === 'today';
+    var isOverdue = key === 'overdue';
+    var alwaysExpanded = opts.alwaysExpanded || false;
+    var isOpen = alwaysExpanded || expandedSections[key] || expandedDays[key];
+
+    var hdrClass = 'section-hdr' + (isToday ? ' today' : '') + (isOverdue ? ' overdue' : '');
+    var arrowClass = 'section-arrow' + (isOpen ? ' open' : '');
+    var bodyClass  = 'section-body' + (isOpen ? ' open' : '');
+    var countText  = items.length ? items.length + (items.length === 1 ? ' task' : ' tasks') : '';
+
+    var arrowHtml = alwaysExpanded ? '' : '<span class="' + arrowClass + '" data-key="' + key + '">&#x25B6;</span>';
+
+    var rowsHtml = items.map(function(item) {
+      return renderTodoRow(item);
+    }).join('');
+
+    var addHtml = '<div class="section-add" data-action="add" data-date="' + (date || '') + '" data-section="' + key + '">+ Add task</div>';
+
+    return '<div class="section" data-section-key="' + key + '">' +
+      '<div class="' + hdrClass + '" data-toggle="' + key + '">' +
+        '<span class="section-label">' + label + '</span>' +
+        (countText ? '<span class="section-count">' + countText + '</span>' : '') +
+        arrowHtml +
+      '</div>' +
+      '<div class="' + bodyClass + '" id="body-' + key + '">' +
+        rowsHtml +
+        addHtml +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderTodoRow(todo) {
+    var children = getChildren(todo.id);
+    var doneCount = children.filter(function(c) { return c.done; }).length;
+    var subCount  = children.length ? '<span class="todo-sub-count">(' + doneCount + '/' + children.length + ')</span>' : '';
+    var rowClass  = 'todo-row' + (todo.done ? ' done' : '');
+
+    var childRows = children.map(function(c) {
+      var cClass = 'todo-row subtask' + (c.done ? ' done' : '');
+      return '<div class="' + cClass + '" data-id="' + c.id + '">' +
+        '<div class="swipe-bg right">&#x2713; Done</div>' +
+        '<div class="swipe-bg left">Delete &#x2715;</div>' +
+        '<div class="todo-inner">' +
+          '<span class="todo-check" data-action="toggle" data-id="' + c.id + '">' + (c.done ? '&#x2713;' : '') + '</span>' +
+          '<span class="todo-text" data-action="edit" data-id="' + c.id + '" data-text="' + esc(c.text) + '" data-date="' + (c.due_date || '') + '">' + esc(c.text) + '</span>' +
+          '<span class="todo-del" data-action="delete" data-id="' + c.id + '">&#x2715;</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="' + rowClass + '" data-id="' + todo.id + '">' +
+      '<div class="swipe-bg right">&#x2713; Done</div>' +
+      '<div class="swipe-bg left">Delete &#x2715;</div>' +
+      '<div class="todo-inner">' +
+        '<span class="todo-check" data-action="toggle" data-id="' + todo.id + '">' + (todo.done ? '&#x2713;' : '') + '</span>' +
+        '<span class="todo-text" data-action="edit" data-id="' + todo.id + '" data-text="' + esc(todo.text) + '" data-date="' + (todo.due_date || '') + '">' + esc(todo.text) + subCount + '</span>' +
+        '<span class="todo-del" data-action="delete" data-id="' + todo.id + '">&#x2715;</span>' +
+      '</div>' +
+    '</div>' + childRows;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ── Listeners ────────────────────────────────────────────────────────
+  function attachListeners() {
+    document.querySelectorAll('[data-toggle]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var key = el.dataset.toggle;
+        if (key === 'today') return;
+        if (key.startsWith('day-')) {
+          expandedDays[key] = !expandedDays[key];
+        } else {
+          expandedSections[key] = !expandedSections[key];
+        }
+        render();
+      });
+    });
+
+    document.querySelectorAll('[data-action="add"]').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openModal(null, null, el.dataset.date || null);
+      });
+    });
+
+    document.querySelectorAll('[data-action="toggle"]').forEach(function(el) {
+      el.addEventListener('click', function(e) { e.stopPropagation(); toggleTodo(parseInt(el.dataset.id)); });
+    });
+    document.querySelectorAll('[data-action="edit"]').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openModal(parseInt(el.dataset.id), el.dataset.text, el.dataset.date || null);
+      });
+    });
+    document.querySelectorAll('[data-action="delete"]').forEach(function(el) {
+      el.addEventListener('click', function(e) { e.stopPropagation(); deleteTodo(parseInt(el.dataset.id)); });
+    });
+
+    document.querySelectorAll('.todo-row').forEach(function(row) {
+      initSwipe(row);
+    });
+  }
+
+  // ── Swipe ────────────────────────────────────────────────────────────
+  function initSwipe(row) {
+    var inner = row.querySelector('.todo-inner');
+    var bgR   = row.querySelector('.swipe-bg.right');
+    var bgL   = row.querySelector('.swipe-bg.left');
+    var startX = 0, curX = 0, active = false;
+
+    function onStart(x) {
+      startX = x; curX = 0; active = true;
+      inner.classList.remove('snapping');
+    }
+    function onMove(x) {
+      if (!active) return;
+      curX = x - startX;
+      inner.style.transform = 'translateX(' + curX + 'px)';
+      var ratio = Math.min(Math.abs(curX) / 80, 1);
+      if (curX > 0) { bgR.style.opacity = ratio; bgL.style.opacity = 0; }
+      else          { bgL.style.opacity = ratio; bgR.style.opacity = 0; }
+    }
+    function onEnd() {
+      if (!active) return;
+      active = false;
+      inner.classList.add('snapping');
+      inner.style.transform = '';
+      bgR.style.opacity = 0; bgL.style.opacity = 0;
+      var id = parseInt(row.dataset.id);
+      if      (curX >  70) { setTimeout(function() { var t = todos.find(function(x) { return x.id === id; }); if (t && !t.done) toggleTodo(id); }, 150); }
+      else if (curX < -70) { setTimeout(function() { deleteTodo(id); }, 150); }
+    }
+
+    inner.addEventListener('touchstart',  function(e) { onStart(e.touches[0].clientX); },    { passive: true });
+    inner.addEventListener('touchmove',   function(e) { e.preventDefault(); onMove(e.touches[0].clientX); }, { passive: false });
+    inner.addEventListener('touchend',    onEnd);
+
+    inner.addEventListener('mousedown', function(e) {
+      onStart(e.clientX);
+      function mm(e2) { onMove(e2.clientX); }
+      function mu()   { onEnd(); document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); }
+      document.addEventListener('mousemove', mm);
+      document.addEventListener('mouseup',   mu);
+    });
+  }
+
+  // ── Todo actions ─────────────────────────────────────────────────────
+  function toggleTodo(id) {
+    var t = todos.find(function(x) { return x.id === id; });
+    if (!t) return;
+    t.done = !t.done;
+    todos.forEach(function(c) { if (c.parent_id === id) c.done = t.done; });
+    if (t.parent_id !== null) {
+      var siblings = todos.filter(function(s) { return s.parent_id === t.parent_id; });
+      if (siblings.every(function(s) { return s.done; })) {
+        var parent = todos.find(function(p) { return p.id === t.parent_id; });
+        if (parent) parent.done = true;
+      }
+    }
+    render();
+  }
+
+  function deleteTodo(id) {
+    var idx = todos.findIndex(function(t) { return t.id === id; });
+    if (idx < 0) return;
+    undoItem = todos[idx];
+    todos.splice(idx, 1);
+    render();
+    showToast('Task deleted');
+  }
+
+  function addTodo(text, date) {
+    todos.unshift({ id: nextId++, text: text, done: false, due_date: date || null, parent_id: null, position: 0 });
+    render();
+  }
+
+  function updateTodo(id, text, date) {
+    var t = todos.find(function(x) { return x.id === id; });
+    if (!t) return;
+    t.text     = text;
+    t.due_date = date || null;
+    render();
+  }
+
+  // ── Modal ────────────────────────────────────────────────────────────
+  function openModal(id, text, date) {
+    editingId = id || null;
+    modalDate = date !== null && date !== undefined ? date : TODAY;
+    var input   = document.getElementById('modal-input');
+    var title   = document.getElementById('modal-title');
+    var saveBtn = document.getElementById('modal-save');
+    input.value = text || '';
+    title.textContent   = id ? 'Edit Task' : 'Add Todo';
+    saveBtn.textContent = id ? 'Save'      : 'Add';
+    updateDateBtns();
+    document.getElementById('modal').classList.add('show');
+    setTimeout(function() { input.focus(); if (text) input.select(); }, 50);
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('show');
+    editingId = null;
+  }
+
+  function saveModal() {
+    var text = document.getElementById('modal-input').value.trim();
+    if (!text) return;
+    var date = modalDate === 'someday' ? null : (modalDate === 'today' ? TODAY : (modalDate === 'tomorrow' ? TOMORROW : modalDate));
+    if (editingId) { updateTodo(editingId, text, date); }
+    else           { addTodo(text, date); }
+    closeModal();
+  }
+
+  function updateDateBtns() {
+    document.querySelectorAll('.date-btn').forEach(function(btn) {
+      var d = btn.dataset.date;
+      var match = (d === 'today' && modalDate === TODAY) ||
+                  (d === 'tomorrow' && modalDate === TOMORROW) ||
+                  (d === 'someday' && !modalDate);
+      btn.classList.toggle('active', match);
+    });
+  }
+
+  // ── Toast ────────────────────────────────────────────────────────────
+  function showToast(msg) {
+    if (undoTimer) clearTimeout(undoTimer);
+    document.getElementById('toast-msg').textContent = msg;
+    document.getElementById('toast').classList.add('show');
+    undoTimer = setTimeout(function() {
+      document.getElementById('toast').classList.remove('show');
+      undoItem = null;
+    }, 3500);
+  }
+
+  // ── Keyboard ─────────────────────────────────────────────────────────
+  document.addEventListener('keydown', function(e) {
+    var tag = document.activeElement.tagName;
+    if (e.key === 't' && !e.ctrlKey && !e.metaKey && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+      e.preventDefault();
+      openModal(null, null, TODAY);
+    }
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ── Wire up static elements ──────────────────────────────────────────
+  document.getElementById('hdr-add').addEventListener('click', function() { openModal(null, null, TODAY); });
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-save').addEventListener('click', saveModal);
+  document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+  document.getElementById('modal-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') saveModal(); });
+
+  document.querySelectorAll('.date-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      modalDate = btn.dataset.date === 'today' ? TODAY : btn.dataset.date === 'tomorrow' ? TOMORROW : null;
+      updateDateBtns();
+    });
+  });
+
+  document.getElementById('toast-undo').addEventListener('click', function() {
+    if (undoItem) {
+      todos.push(undoItem);
+      undoItem = null;
+      clearTimeout(undoTimer);
+      document.getElementById('toast').classList.remove('show');
+      render();
+    }
+  });
+
+  // ── Init ─────────────────────────────────────────────────────────────
+  render();
+})();
+</script>
+</body>
+</html>

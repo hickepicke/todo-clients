@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash /mnt/c/Users/henri/Documents/dev/git/todo-clients/.claude/statusline-command.sh)",
+      "WebSearch"
+    ]
+  }
+}

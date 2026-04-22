@@ -1,0 +1,36 @@
+name            = "hicke-todos"
+main            = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding       = "hicke_todos"
+database_name = "hicke-todos"
+database_id   = "e32472ba-fd7e-4c9b-b905-d3a9462d126a"
+
+[[routes]]
+pattern   = "api.hicke.se/api/todos*"
+zone_name = "hicke.se"
+
+[[routes]]
+pattern   = "api.hicke.se/install.sh"
+zone_name = "hicke.se"
+
+[[routes]]
+pattern   = "api.hicke.se/icon.png"
+zone_name = "hicke.se"
+
+[[routes]]
+pattern   = "api.hicke.se/favicon.png"
+zone_name = "hicke.se"
+
+[[routes]]
+pattern   = "api.hicke.se/manifest.json"
+zone_name = "hicke.se"
+
+[[routes]]
+pattern   = "todo.hicke.se/*"
+zone_name = "hicke.se"
+
+[vars]
+DOCS_ORIGIN = "https://docs.hicke.se"
+APP_ORIGIN  = "https://todo.hicke.se"
