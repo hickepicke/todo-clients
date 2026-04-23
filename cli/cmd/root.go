@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hickepicke/todo-clients/api"
-	"github.com/hickepicke/todo-clients/config"
+	"github.com/hickepicke/todo-clients/cli/api"
+	"github.com/hickepicke/todo-clients/cli/config"
 	"github.com/spf13/cobra"
 )
 

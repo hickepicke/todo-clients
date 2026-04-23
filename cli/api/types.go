@@ -4,7 +4,7 @@ package api
 type Todo struct {
 	ID           int     `json:"id"`
 	Text         string  `json:"text"`
-	Done         bool    `json:"done"`
+	Done         int     `json:"done"`
 	Position     int     `json:"position"`
 	ParentID     *int    `json:"parent_id"`
 	IndentLevel  int     `json:"indent_level"`

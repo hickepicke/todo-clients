@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hickepicke/todo-clients/api"
+	"github.com/hickepicke/todo-clients/cli/api"
 	"github.com/spf13/cobra"
 )
 
@@ -32,8 +32,8 @@ var doneCmd = &cobra.Command{
 		if current == nil {
 			return fmt.Errorf("todo %d not found", id)
 		}
-		newDone := !current.Done
-		todos, err := client.Update(id, map[string]any{"done": newDone, "cascade": true})
+		newDone := (current.Done + 1) % 3
+		todos, err := client.Update(id, map[string]any{"done": newDone, "cascade": newDone == 2})
 		if err != nil {
 			return err
 		}

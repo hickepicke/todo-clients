@@ -1,4 +1,4 @@
-module github.com/hickepicke/todo-clients
+module github.com/hickepicke/todo-clients/cli
 
 go 1.24.3
 

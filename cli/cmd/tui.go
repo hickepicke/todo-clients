@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/hickepicke/todo-clients/api"
+	"github.com/hickepicke/todo-clients/cli/api"
 	"github.com/spf13/cobra"
 )
 
@@ -367,9 +367,9 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if t == nil {
 					break
 				}
-				newDone := !t.Done
+				newDone := (t.Done + 1) % 3
 				id := t.ID
-				cascade := !isSub // cascade to subtasks only for top-level todos
+				cascade := !isSub && newDone == 2
 				m.mode = tuiLoading
 				return m, func() tea.Msg {
 					todos, err := m.cl.Update(id, map[string]any{"done": newDone, "cascade": cascade})
@@ -498,11 +498,13 @@ func (m tuiModel) View() string {
 				continue
 			}
 			check := "☐"
-			if child.Done {
+			if child.Done == 1 {
+				check = "◑"
+			} else if child.Done == 2 {
 				check = "☑"
 			}
 			text := child.Text
-			if child.Done {
+			if child.Done == 2 {
 				text = tuiStyleDone.Render(text)
 			} else {
 				text = tuiChildStyle.Render(text)
@@ -516,7 +518,9 @@ func (m tuiModel) View() string {
 				continue
 			}
 			check := "☐"
-			if t.Done {
+			if t.Done == 1 {
+				check = "◑"
+			} else if t.Done == 2 {
 				check = "☑"
 			}
 			id := tuiStyleID.Render(fmt.Sprintf("[%d]", t.ID))
@@ -525,7 +529,7 @@ func (m tuiModel) View() string {
 				text += fmt.Sprintf(" (%d/%d)", t.SubtasksDone, t.SubtaskCount)
 			}
 			var textPart string
-			if t.Done {
+			if t.Done == 2 {
 				textPart = tuiStyleDone.Render(text)
 			} else {
 				textPart = text

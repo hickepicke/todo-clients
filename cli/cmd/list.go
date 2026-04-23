@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/hickepicke/todo-clients/api"
+	"github.com/hickepicke/todo-clients/cli/api"
 	"github.com/spf13/cobra"
 )
 
@@ -161,7 +161,9 @@ func printRow(t api.Todo, childOf map[int][]api.Todo, active, done lipgloss.Styl
 	prefix := "  "
 	id := styleID.Render(fmt.Sprintf("[%d]", t.ID))
 	check := "☐"
-	if t.Done {
+	if t.Done == 1 {
+		check = "◑"
+	} else if t.Done == 2 {
 		check = "☑"
 	}
 
@@ -179,7 +181,7 @@ func printRow(t api.Todo, childOf map[int][]api.Todo, active, done lipgloss.Styl
 	}
 
 	line := prefix + id + " " + check + " "
-	if t.Done {
+	if t.Done == 2 {
 		line += done.Render(text)
 	} else {
 		line += active.Render(text)
@@ -193,12 +195,14 @@ func printRow(t api.Todo, childOf map[int][]api.Todo, active, done lipgloss.Styl
 	for _, c := range childOf[t.ID] {
 		cid := styleID.Render(fmt.Sprintf("  [%d]", c.ID))
 		ccheck := "☐"
-		if c.Done {
+		if c.Done == 1 {
+			ccheck = "◑"
+		} else if c.Done == 2 {
 			ccheck = "☑"
 		}
 		ctext := c.Text
 		cline := "  " + cid + " " + ccheck + " "
-		if c.Done {
+		if c.Done == 2 {
 			cline += done.Render(ctext)
 		} else {
 			cline += lipgloss.NewStyle().Faint(true).Render(ctext)
