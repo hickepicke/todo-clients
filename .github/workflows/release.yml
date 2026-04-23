@@ -26,7 +26,7 @@ jobs:
         run: |
           cd cli
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-          go build -ldflags="-s -w" -o ../todo-${{ matrix.suffix }} .
+          go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o ../todo-${{ matrix.suffix }} .
       - uses: softprops/action-gh-release@v2
         with:
           files: todo-${{ matrix.suffix }}
