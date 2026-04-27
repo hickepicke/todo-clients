@@ -6,12 +6,17 @@ import (
 	"github.com/hickepicke/todo-clients/gui/app"
 )
 
-var version = "dev"
+var (
+	version = "dev"
+	commit  = "unknown"
+)
 
 func main() {
+	app.Version = version
+	app.Commit = commit
 	g.RunWithConfig(g.AppConfig{
 		Title:  "Todos",
-		Width:  480,
+		Width:  300,
 		Height: 700,
 	}, app.Root)
 }

@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Inject version
+        run: |
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          sed -i "s/__BUILD_VERSION__/${{ github.ref_name }}/g" worker/src/index.js
+          sed -i "s/__BUILD_COMMIT__/${SHORT_SHA}/g" worker/src/index.js
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}

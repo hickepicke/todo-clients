@@ -9,7 +9,9 @@
       "Bash(bash /home/hicke/.claude/statusline-command.sh)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(curl *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(go build *)",
+      "Bash(go version *)"
     ]
   }
 }

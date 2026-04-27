@@ -299,6 +299,7 @@ const TODO_APP_HTML = `<!DOCTYPE html>
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     .toast-undo { color: var(--accent); font-weight: 700; cursor: pointer; padding: 0.15rem 0; }
     .app-loading { padding: 2rem 1rem; text-align: center; color: var(--text-faint); font-size: 0.85rem; }
+    .app-version { text-align: center; color: #bbb; font-size: 0.7rem; padding: 0.75rem 1rem 1.5rem; }
     .todo-link {
       color: var(--accent); font-size: 0.72rem; font-weight: 600;
       text-decoration: none; border-radius: 4px;
@@ -365,6 +366,7 @@ const TODO_APP_HTML = `<!DOCTYPE html>
   <span id="toast-msg">Task deleted</span>
   <span class="toast-undo" id="toast-undo">Undo</span>
 </div>
+<div class="app-version">__BUILD_VERSION__ &middot; __BUILD_COMMIT__</div>
 <script>
 (function () {
   var API = 'https://api.hicke.se/api/todos';

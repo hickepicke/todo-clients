@@ -13,6 +13,20 @@ import (
 	"github.com/hickepicke/todo-clients/gui/config"
 )
 
+const (
+	colorAccent      = "#0c3c77" // navy — web app primary
+	colorGreenFg     = "#166534" // green — in-progress / done
+	colorGreenBg     = "#f0fdf4"
+	colorCheckBorder = "#1c69c7" // blue border — unchecked
+	colorCheckBg     = "#f0f4ff"
+	colorRed         = "#dc2626"
+)
+
+var (
+	Version = "dev"
+	Commit  = "unknown"
+)
+
 func saveConfig(apiKey, apiBase string) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -26,40 +40,46 @@ func saveConfig(apiKey, apiBase string) error {
 	return os.WriteFile(filepath.Join(dir, "config.toml"), []byte(content), 0600)
 }
 
-func derefStr(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
-func dateChip(label, date string, sel *g.StateValue[string]) g.View {
-	active := sel.Get() == date
-	var bg, fg any = g.Surface, g.Secondary
-	if active {
-		bg, fg = g.Accent, g.White
+func checkBox(done int, onTap func()) g.View {
+	var fg, bg, border any
+	var symbol string
+	switch done {
+	case 1: // in-progress — green ◑
+		symbol = "◑"
+		fg = g.Hex(colorGreenFg)
+		bg = g.Hex(colorGreenBg)
+		border = g.Hex(colorGreenFg)
+	case 2: // done — green ✓
+		symbol = "✓"
+		fg = g.Hex(colorGreenFg)
+		bg = g.Hex(colorGreenBg)
+		border = g.Hex(colorGreenFg)
+	default: // unchecked — invisible ✓ keeps box same size
+		symbol = "✓"
+		fg = g.Hex(colorCheckBg)
+		bg = g.Hex(colorCheckBg)
+		border = g.Hex(colorCheckBorder)
 	}
 	return g.HStack(
-		g.Text(label).Font(g.Caption).Color(fg),
-	).PaddingH(g.SpaceSM).PaddingV(g.SpaceXS).
-		Background(bg).CornerRadius(999).Stroke(g.BorderColor, 1).
-		OnTap(func() { sel.Set(date) })
+		g.Text(symbol).Font(g.Caption).Color(fg),
+	).Background(bg).
+		Stroke(border, 2).
+		CornerRadius(4).
+		PaddingH(g.SpaceSM).
+		PaddingV(2).
+		OnTap(onTap)
 }
 
 var Root = g.Define(func(s *g.Scope) g.View {
 	cfg, _ := config.Load()
 
-	apiKey := g.State(s, cfg.APIKey)
-	apiBase := g.State(s, cfg.APIBase)
+	apiKey       := g.State(s, cfg.APIKey)
+	apiBase      := g.State(s, cfg.APIBase)
 	showSettings := g.State(s, cfg.APIKey == "")
-
-	todos := g.State(s, []api.Todo{})
-	loadErr := g.State(s, "")
-
-	showAdd := g.State(s, false)
-	editTodo := g.State(s, (*api.Todo)(nil))
-	newText := g.State(s, "")
-	newDate := g.State(s, isoToday())
+	todos        := g.State(s, []api.Todo{})
+	loadErr      := g.State(s, "")
+	showAdd      := g.State(s, false)
+	newText      := g.State(s, "")
 
 	cl := &api.Client{BaseURL: apiBase.Get(), APIKey: apiKey.Get()}
 
@@ -75,68 +95,42 @@ var Root = g.Define(func(s *g.Scope) g.View {
 		}()
 	}
 
-	g.UseEffect(s, func(ctx context.Context) func() {
-		go func() {
-			items, err := cl.List()
-			if ctx.Err() != nil {
-				return
-			}
-			if err != nil {
-				loadErr.Set(err.Error())
-				return
-			}
-			todos.Set(items)
-		}()
-		return nil
-	})
-
-	openAdd := func(date string) {
-		editTodo.Set(nil)
-		newText.Set("")
-		newDate.Set(date)
-		showAdd.Set(true)
-	}
-
-	openEdit := func(t api.Todo) {
-		editTodo.Set(&t)
-		newText.Set(t.Text)
-		newDate.Set("")
-		showAdd.Set(true)
-	}
-
-	saveAdd := func() {
+	saveNew := func() {
 		text := newText.Get()
 		if text == "" {
 			return
 		}
-		et := editTodo.Get()
-		if et != nil {
-			go func() { cl.Update(et.ID, map[string]any{"text": text}); refresh() }()
-		} else {
-			date := newDate.Get()
-			var dueDate *string
-			if date != "" {
-				dueDate = &date
-			}
-			go func() { cl.Create(text, derefStr(dueDate), "", nil); refresh() }()
-		}
+		go func() { cl.Create(text, "", "", nil); refresh() }()
 		showAdd.Set(false)
 		newText.Set("")
 	}
 
+	g.UseEffect(s, func(ctx context.Context) func() {
+		refresh()
+		ticker := time.NewTicker(10 * time.Second)
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					refresh()
+				}
+			}
+		}()
+		return ticker.Stop
+	})
+
 	// ── Settings screen ───────────────────────────────────────────────────────
 	if showSettings.Get() {
 		keyInput := g.State(s, apiKey.Get())
-		saveErr := g.State(s, "")
+		saveErr  := g.State(s, "")
 
 		return g.Scaffold(
 			g.VStack(
-				g.Text("Enter your API key to connect to api.hicke.se.").
-					Font(g.Caption).Color(g.Secondary),
-				g.TextField(keyInput).
-					Placeholder("API key").
-					MinHeight(36),
-				g.Text(saveErr.Get()).Font(g.Caption).Color(g.Destructive),
+				g.Text("Enter your API key.").Font(g.Caption).Color(g.Secondary),
+				g.TextField(keyInput).Placeholder("API key").MinHeight(40),
+				g.Text(saveErr.Get()).Font(g.Caption).Color(g.Hex(colorRed)),
 				g.HStack(
 					g.Button("Save", func() {
 						k := keyInput.Get()
@@ -151,105 +145,102 @@ var Root = g.Define(func(s *g.Scope) g.View {
 						apiKey.Set(k)
 						apiBase.Set(config.DefaultBase)
 						showSettings.Set(false)
-						refresh()
 					}).Style(g.ButtonPrimary),
 				).Align(g.Trailing),
 			).Spacing(g.SpaceMD).Padding(g.SpaceLG),
 		).Top(
 			g.HStack(
-				g.Text("Settings").Font(g.Title).Bold().Grow(),
-			).Padding(g.SpaceMD),
+				g.Text("Settings").Font(g.Title).Bold().Color(g.White).Grow(),
+			).Background(g.Hex(colorAccent)).Padding(g.SpaceMD),
 		)
 	}
 
 	// ── Header ────────────────────────────────────────────────────────────────
-	allTodos := todos.Get()
 	doneCount := 0
-	for _, t := range allTodos {
+	for _, t := range todos.Get() {
 		if t.Done == 2 {
 			doneCount++
 		}
 	}
+	total := len(todos.Get())
 
 	header := g.HStack(
-		g.Text("✅ Todos").Font(g.Title).Bold().Grow(),
-		g.Text(fmt.Sprintf("%d/%d done", doneCount, len(allTodos))).Font(g.Caption).Color(g.Secondary),
-		g.HStack(g.Text("⚙").Font(g.Caption)).
-			PaddingH(g.SpaceSM).PaddingV(g.SpaceXS).CornerRadius(4).
+		g.Text("Todos").Font(g.Title).Bold().Color(g.White).Grow(),
+		g.Text(fmt.Sprintf("%d/%d", doneCount, total)).Font(g.Caption).Color(g.Hex("#ffffff99")),
+		g.HStack(g.Text("⚙").Font(g.Caption).Color(g.White)).
+			Stroke(g.Hex("#ffffff55"), 1).
+			PaddingH(g.SpaceSM).PaddingV(g.SpaceXS).CornerRadius(6).
 			OnTap(func() { showSettings.Set(true) }),
-		g.HStack(g.Text("+").Bold()).
-			PaddingH(g.SpaceSM).PaddingV(g.SpaceXS).
-			Background(g.Accent).CornerRadius(4).
-			OnTap(func() { openAdd(isoToday()) }),
-	).Spacing(g.SpaceSM).Padding(g.SpaceMD)
+		g.HStack(g.Text("+").Bold().Color(g.White)).
+			Stroke(g.Hex("#ffffff88"), 1).
+			PaddingH(g.SpaceSM).PaddingV(g.SpaceXS).CornerRadius(6).
+			OnTap(func() { showAdd.Set(!showAdd.Get()) }),
+	).Spacing(g.SpaceSM).Background(g.Hex(colorAccent)).Padding(g.SpaceMD)
 
-	// ── Add / Edit form ───────────────────────────────────────────────────────
-	var addForm g.View
-	if showAdd.Get() {
-		et := editTodo.Get()
-		title := "Add Todo"
-		if et != nil {
-			title = "Edit Task"
-		}
-		tomorrow := isoDate(time.Now().AddDate(0, 0, 1))
-		addForm = g.VStack(
-			g.Text(title).Font(g.Title3).Bold(),
-			g.TextField(newText).
-				Placeholder("What needs to be done?").
-				OnSubmit(func(string) { saveAdd() }).
-				MinHeight(36),
-			g.HStack(
-				dateChip("Today", isoToday(), newDate),
-				dateChip("Tomorrow", tomorrow, newDate),
-				dateChip("Someday", "", newDate),
-			).Spacing(g.SpaceSM),
-			g.HStack(
-				g.Button("Cancel", func() { showAdd.Set(false) }),
-				g.Button("Save", saveAdd).Style(g.ButtonPrimary),
-			).Spacing(g.SpaceSM).Align(g.Trailing),
-		).Spacing(g.SpaceSM).
-			Padding(g.SpaceMD).
-			Background(g.Surface).
-			CornerRadius(10).
-			Stroke(g.BorderColor, 1)
-	}
+	// ── Body ──────────────────────────────────────────────────────────────────
+	var rows []any
 
-	// ── Section list ──────────────────────────────────────────────────────────
-	sections := groupTodos(allTodos)
-	var body []any
-
-	if addForm != nil {
-		body = append(body, addForm)
-	}
 	if loadErr.Get() != "" {
-		body = append(body, g.Text(loadErr.Get()).Font(g.Caption).Color(g.Destructive).Padding(g.SpaceSM))
+		rows = append(rows, g.Text(loadErr.Get()).Font(g.Caption).Color(g.Hex(colorRed)).Padding(g.SpaceSM))
 	}
 
-	for _, sec := range sections {
-		sec := sec
-		secDate := sec.AddDate
+	if showAdd.Get() {
+		rows = append(rows,
+			g.VStack(
+				g.TextField(newText).
+					Placeholder("What needs to be done?").
+					MinHeight(40).
+					OnSubmit(func(string) { saveNew() }),
+				g.HStack(
+					g.Button("Cancel", func() { showAdd.Set(false); newText.Set("") }),
+					g.Button("Add", saveNew).Style(g.ButtonPrimary),
+				).Spacing(g.SpaceSM).Align(g.Trailing),
+			).Spacing(g.SpaceSM).
+				Padding(g.SpaceMD).
+				Background(g.Surface).
+				CornerRadius(10).
+				Stroke(g.Hex(colorAccent), 1),
+		)
+	}
 
-		rows := []any{
+	for _, t := range todos.Get() {
+		t := t
+		indent := g.SpaceXS
+		if t.ParentID != nil {
+			indent = g.SpaceLG
+		}
+
+		textView := g.Text(t.Text).Grow()
+		if t.Done == 2 {
+			textView = textView.Color(g.Secondary).Strikethrough(true)
+		}
+
+		rows = append(rows,
 			g.HStack(
-				g.Text(sec.Label).Font(g.Caption).Bold().Color(g.Secondary).Grow(),
-				g.HStack(g.Text("+").Font(g.Caption).Color(g.Secondary)).
-					PaddingH(g.SpaceXS).
-					OnTap(func() { openAdd(secDate) }),
-			).PaddingH(g.SpaceSM).PaddingTop(g.SpaceMD).PaddingBottom(g.SpaceXS),
-		}
-
-		for _, t := range sec.Items {
-			t := t
-			rows = append(rows, TodoRow(t, childrenOf(allTodos, t.ID), cl, refresh, openEdit))
-		}
-
-		body = append(body, g.VStack(rows...).
-			Background(g.Surface).CornerRadius(10).Stroke(g.BorderColor, 1).PaddingBottom(g.SpaceXS))
+				checkBox(t.Done, func() {
+					next := (t.Done + 1) % 3
+					go func() {
+						cl.Update(t.ID, map[string]any{
+							"done":    next,
+							"cascade": t.SubtaskCount > 0 && next == 2,
+						})
+						refresh()
+					}()
+				}),
+				textView,
+			).Spacing(g.SpaceSM).
+				PaddingH(indent).
+				PaddingV(g.SpaceXS),
+		)
 	}
+
+	footer := g.HStack(
+		g.Text(fmt.Sprintf("%s · %s", Version, Commit)).Font(g.Caption).Color(g.Hex("#bbbbbb")),
+	).Align(g.Center).PaddingV(g.SpaceSM)
 
 	return g.Scaffold(
 		g.ScrollView(
-			g.VStack(body...).Spacing(g.SpaceSM).Padding(g.SpaceMD),
+			g.VStack(append(rows, footer)...).Padding(g.SpaceSM),
 		),
 	).Top(header)
 })
