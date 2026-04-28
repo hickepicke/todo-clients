@@ -7,9 +7,10 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --accent: #1c69c7; --bg: #f0f0f0; --surface: #fff;
+      --accent: #0c3c77; --bg: #f0f0f0; --surface: #fff;
       --surface2: #e8e8e8; --border: rgba(0,0,0,0.08);
       --text: #1a1a1a; --dim: rgba(0,0,0,0.42); --faint: rgba(0,0,0,0.22);
+      --green-fg: #166534; --green-bg: #f0fdf4;
     }
     body {
       width: 360px; min-height: 200px; max-height: 560px;
@@ -57,13 +58,14 @@
     .todo-row.subtask { padding-left: 1.75rem; }
     .todo-check {
       flex-shrink: 0; width: 16px; height: 16px;
-      border: 1.5px solid rgba(28,105,199,0.35); border-radius: 3px;
+      border: 1.5px solid rgba(28,105,199,0.55); border-radius: 3px;
       background: rgba(28,105,199,0.04); color: var(--accent);
       display: flex; align-items: center; justify-content: center;
       font-size: 0.65rem; cursor: pointer;
     }
     .todo-check:hover { background: rgba(28,105,199,0.12); }
-    .done .todo-check { background: rgba(28,105,199,0.12); }
+    .in-progress .todo-check { border-color: var(--green-fg); background: rgba(22,101,52,0.08); color: var(--green-fg); }
+    .done .todo-check { border-color: var(--green-fg); background: rgba(22,101,52,0.08); color: var(--green-fg); }
     .todo-text { flex: 1; line-height: 1.35; cursor: pointer; }
     .done .todo-text { text-decoration: line-through; color: var(--faint); }
     .todo-link {

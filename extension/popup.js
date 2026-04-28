@@ -35,10 +35,10 @@ async function load() {
   todos = await r.json();
 }
 
-async function apiToggle(id, done) {
+async function apiToggle(id, done, cascade) {
   await tf('/api/todos/' + id, {
     method: 'PATCH',
-    body: JSON.stringify({ done: done, cascade: true })
+    body: JSON.stringify({ done: done, cascade: !!cascade })
   });
 }
 
@@ -101,10 +101,15 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+function doneClass(done) {
+  return done === 2 ? ' done' : done === 1 ? ' in-progress' : '';
+}
+function checkSymbol(done) {
+  return done === 2 ? '&#x2713;' : done === 1 ? '&#x25D1;' : '';
+}
+
 function buildRow(t, showDate) {
   const children = getChildren(t.id);
-  const done = t.done ? ' done' : '';
-  const checkMark = t.done ? '&#x2713;' : '';
   const linkHtml = t.url
     ? '<a href="' + esc(t.url) + '" target="_blank" class="todo-link">Link</a>'
     : '';
@@ -112,24 +117,22 @@ function buildRow(t, showDate) {
     ? '<span style="font-size:0.62rem;color:var(--faint);margin-left:0.25rem">(' + dateLabel(t.due_date) + ')</span>'
     : '';
   const subCount = children.length
-    ? '<span style="font-size:0.65rem;color:var(--faint);margin-left:0.2rem">(' + children.filter(c => c.done).length + '/' + children.length + ')</span>'
+    ? '<span style="font-size:0.65rem;color:var(--faint);margin-left:0.2rem">(' + children.filter(c => c.done === 2).length + '/' + children.length + ')</span>'
     : '';
 
-  let html = '<div class="todo-row' + done + '" data-id="' + t.id + '">'
-    + '<span class="todo-check" data-action="toggle" data-id="' + t.id + '" data-done="' + t.done + '">' + checkMark + '</span>'
+  let html = '<div class="todo-row' + doneClass(t.done) + '" data-id="' + t.id + '">'
+    + '<span class="todo-check" data-action="toggle" data-id="' + t.id + '" data-done="' + t.done + '" data-parent="true">' + checkSymbol(t.done) + '</span>'
     + '<span class="todo-text" data-action="edit" data-id="' + t.id + '" data-text="' + esc(t.text) + '">' + esc(t.text) + subCount + dateTag + '</span>'
     + linkHtml
     + '<span class="todo-del" data-action="delete" data-id="' + t.id + '">&#x2715;</span>'
     + '</div>';
 
   children.forEach(function(c) {
-    const cdone = c.done ? ' done' : '';
-    const ccheck = c.done ? '&#x2713;' : '';
     const clinkHtml = c.url
       ? '<a href="' + esc(c.url) + '" target="_blank" class="todo-link">Link</a>'
       : '';
-    html += '<div class="todo-row subtask' + cdone + '" data-id="' + c.id + '">'
-      + '<span class="todo-check" data-action="toggle" data-id="' + c.id + '" data-done="' + c.done + '">' + ccheck + '</span>'
+    html += '<div class="todo-row subtask' + doneClass(c.done) + '" data-id="' + c.id + '">'
+      + '<span class="todo-check" data-action="toggle" data-id="' + c.id + '" data-done="' + c.done + '" data-parent="false">' + checkSymbol(c.done) + '</span>'
       + '<span class="todo-text" data-action="edit" data-id="' + c.id + '" data-text="' + esc(c.text) + '">' + esc(c.text) + '</span>'
       + clinkHtml
       + '<span class="todo-del" data-action="delete" data-id="' + c.id + '">&#x2715;</span>'
@@ -194,8 +197,10 @@ function attachListeners() {
     el.addEventListener('click', function(e) {
       e.stopPropagation();
       const id = parseInt(el.dataset.id);
-      const done = el.dataset.done === 'true';
-      apiToggle(id, !done).then(refresh);
+      const done = parseInt(el.dataset.done);
+      const next = (done + 1) % 3;
+      const cascade = el.dataset.parent === 'true' && next === 2;
+      apiToggle(id, next, cascade).then(refresh);
     });
   });
 
