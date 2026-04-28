@@ -206,7 +206,7 @@ const TODO_APP_HTML = `<!DOCTYPE html>
     }
     .todo-check:hover, .todo-check:active { background: rgba(220,38,38,0.1); }
     .todo-check.in-progress { border-color: var(--green-fg); background: rgba(22,101,52,0.08); position: relative; overflow: hidden; }
-    .todo-check.in-progress::after { content: ''; position: absolute; inset: -2px; background: linear-gradient(to top right, transparent calc(50% - 1.5px), var(--green-fg) calc(50%), transparent calc(50% + 1.5px)); }
+    .todo-check.in-progress::after { content: ''; position: absolute; inset: -2px; background: linear-gradient(to top left, transparent calc(50% - 1.5px), var(--green-fg) calc(50%), transparent calc(50% + 1.5px)); }
     .todo-row.done .todo-check { border-color: var(--green-fg); background: rgba(22,101,52,0.08); color: var(--green-fg); }
     .todo-text { flex: 1; font-size: 1rem; line-height: 1.4; color: var(--text); cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .todo-row.done .todo-text { text-decoration: line-through; color: var(--text-faint); }

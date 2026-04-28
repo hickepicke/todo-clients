@@ -65,7 +65,7 @@
     }
     .todo-check:hover { background: rgba(28,105,199,0.12); }
     .todo-check.in-progress { border-color: var(--green-fg); background: rgba(22,101,52,0.08); position: relative; overflow: hidden; }
-    .todo-check.in-progress::after { content: ''; position: absolute; inset: -2px; background: linear-gradient(to top right, transparent calc(50% - 1.5px), var(--green-fg) calc(50%), transparent calc(50% + 1.5px)); }
+    .todo-check.in-progress::after { content: ''; position: absolute; inset: -2px; background: linear-gradient(to top left, transparent calc(50% - 1.5px), var(--green-fg) calc(50%), transparent calc(50% + 1.5px)); }
     .todo-row.done .todo-check { border-color: var(--green-fg); background: rgba(22,101,52,0.08); color: var(--green-fg); }
     .todo-text { flex: 1; line-height: 1.35; cursor: pointer; }
     .done .todo-text { text-decoration: line-through; color: var(--faint); }
