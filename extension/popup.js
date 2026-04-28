@@ -104,10 +104,6 @@ function esc(s) {
 function doneClass(done) {
   return done === 2 ? ' done' : done === 1 ? ' in-progress' : '';
 }
-function checkSymbol(done) {
-  return done === 2 ? '&#x2713;' : done === 1 ? '&#x25D1;' : '';
-}
-
 function buildRow(t, showDate) {
   const children = getChildren(t.id);
   const linkHtml = t.url
@@ -121,7 +117,7 @@ function buildRow(t, showDate) {
     : '';
 
   let html = '<div class="todo-row' + doneClass(t.done) + '" data-id="' + t.id + '">'
-    + '<span class="todo-check" data-action="toggle" data-id="' + t.id + '" data-done="' + t.done + '" data-parent="true">' + checkSymbol(t.done) + '</span>'
+    + '<span class="todo-check' + (t.done === 1 ? ' in-progress' : '') + '" data-action="toggle" data-id="' + t.id + '" data-done="' + t.done + '" data-parent="true">' + (t.done === 2 ? '&#x2714;' : '') + '</span>'
     + '<span class="todo-text" data-action="edit" data-id="' + t.id + '" data-text="' + esc(t.text) + '">' + esc(t.text) + subCount + dateTag + '</span>'
     + linkHtml
     + '<span class="todo-del" data-action="delete" data-id="' + t.id + '">&#x2715;</span>'
@@ -132,7 +128,7 @@ function buildRow(t, showDate) {
       ? '<a href="' + esc(c.url) + '" target="_blank" class="todo-link">Link</a>'
       : '';
     html += '<div class="todo-row subtask' + doneClass(c.done) + '" data-id="' + c.id + '">'
-      + '<span class="todo-check" data-action="toggle" data-id="' + c.id + '" data-done="' + c.done + '" data-parent="false">' + checkSymbol(c.done) + '</span>'
+      + '<span class="todo-check' + (c.done === 1 ? ' in-progress' : '') + '" data-action="toggle" data-id="' + c.id + '" data-done="' + c.done + '" data-parent="false">' + (c.done === 2 ? '&#x2714;' : '') + '</span>'
       + '<span class="todo-text" data-action="edit" data-id="' + c.id + '" data-text="' + esc(c.text) + '">' + esc(c.text) + '</span>'
       + clinkHtml
       + '<span class="todo-del" data-action="delete" data-id="' + c.id + '">&#x2715;</span>'
