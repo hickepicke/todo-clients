@@ -11,7 +11,9 @@
       "Bash(curl *)",
       "Bash(git *)",
       "Bash(go build *)",
-      "Bash(go version *)"
+      "Bash(go version *)",
+      "Bash(/mnt/c/Program Files/Go/bin/go.exe build *)",
+      "Bash(powershell.exe *)"
     ]
   }
 }
